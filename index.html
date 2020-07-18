@@ -61,6 +61,7 @@
 
         .marioud-btn {
             font-size: 18px;
+            outline: 0;
             padding: 10px 28px;
             color: #b70000;
             border-radius: 4px;
@@ -73,6 +74,31 @@
         .marioud-btn:hover {
             background-color: #e39e9e44;
         }
+
+
+    	.marioud-select {
+    		width: 50px;
+    		height: 20px;
+    		outline: 0;
+    		background-color: white;
+    	}
+
+    	.btn-ajouter-panier {
+            color: #b70000;
+            outline: 0;
+            padding: 4px;
+            border-radius: 4px;
+            background-color: white;
+            border: 1px solid #b70000;
+            cursor: pointer;
+            text-decoration: none;
+    	}
+
+    	.not-available {
+    		margin-top:5px;
+    		color: #b70000;;
+    	}
+
     </style>
 </head>
 <body>
@@ -100,7 +126,24 @@
                     class="chouchou-container">
                 <img :src="chouchou.imageUrl" alt="">
                 <div class="chouchou-title">
-                    {{chouchou.title}}
+                    {{chouchou.title}} <br>
+                    {{chouchou.price}}.-
+                    <div style="margin-top:0.5em;" v-if="chouchou.stock > 0">
+	                    <select
+	                    	v-model="chouchou.nbWanted"
+	                    	class="marioud-select">
+	                    	<option>0</option>
+	                    	<option v-for="(n, index) in chouchou.stock" :key="index">{{n}}</option>
+	                    </select>
+	                    <button v-if="chouchou.nbWanted"
+	                    	@click="addToPanier(chouchou)"
+	                    	 class="btn-ajouter-panier">
+	                    	Dans mon panier !
+	                    </button>
+                    </div>
+                    <div v-else class="not-available">
+                    	Plus dispo !
+                    </div>
                 </div>
             </div>
         </div>
@@ -117,6 +160,21 @@
         data: {
             chouchous: [],
             loaded: false,
+            panier: [],
+        },
+        methods: {
+        	addToPanier: function(chouchou) {
+        		if (this.panier.indexOf(chouchou) === -1) {
+	    			this.panier.push(chouchou);
+        		}
+        	}
+        },
+        computed: {
+        	panierReal: function() {
+        		return this.panier.filter(function(p) {
+    				return p.nbWanted > 0;
+        		});
+        	}
         }
     });
 
@@ -138,9 +196,11 @@
         var jsData = rows.slice(1).map(function(row) {
             var rowData = row.split(',');
             return {
+            	nbWanted: 0,
                 title: rowData[0],
-                disponible: rowData[1] === 'true',
-                imageUrl: 'static/images/chouchous/' + rowData[2]
+                price: rowData[1],
+                imageUrl: 'static/images/chouchous/' + rowData[2],
+                stock: parseInt(rowData[3]) || 0
             };
         });
         console.log(rows);
