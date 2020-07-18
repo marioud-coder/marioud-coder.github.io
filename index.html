@@ -7,8 +7,8 @@
     <title>Chouchous Marioud</title>
 
     <link rel="icon"
-      type="image/png"
-      href="static/images/favicon.png">
+          type="image/png"
+          href="static/images/favicon.png">
 
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
 
@@ -76,14 +76,14 @@
         }
 
 
-    	.marioud-select {
-    		width: 50px;
-    		height: 20px;
-    		outline: 0;
-    		background-color: white;
-    	}
+        .marioud-select {
+            width: 50px;
+            height: 20px;
+            outline: 0;
+            background-color: white;
+        }
 
-    	.btn-ajouter-panier {
+        .btn-ajouter-panier {
             color: #b70000;
             outline: 0;
             padding: 4px;
@@ -92,12 +92,12 @@
             border: 1px solid #b70000;
             cursor: pointer;
             text-decoration: none;
-    	}
+        }
 
-    	.not-available {
-    		margin-top:5px;
-    		color: #b70000;;
-    	}
+        .not-available {
+            margin-top:5px;
+            color: #b70000;
+        }
 
     </style>
 </head>
@@ -114,13 +114,14 @@
         <div id="passer-commande-container" class="text-center">
             <a class="marioud-btn"
                target="_blank"
-               href="https://forms.gle/oRnkuCiR9ngTYbBR6">
+               @click="validateCommand"
+            >
                 Passer commande !
             </a>
         </div>
 
         <div
-             class="gallery">
+                class="gallery">
             <div
                     v-for="chouchou in chouchous"
                     class="chouchou-container">
@@ -129,20 +130,20 @@
                     {{chouchou.title}} <br>
                     {{chouchou.price}}.-
                     <div style="margin-top:0.5em;" v-if="chouchou.stock > 0">
-	                    <select
-	                    	v-model="chouchou.nbWanted"
-	                    	class="marioud-select">
-	                    	<option>0</option>
-	                    	<option v-for="(n, index) in chouchou.stock" :key="index">{{n}}</option>
-	                    </select>
-	                    <button v-if="chouchou.nbWanted"
-	                    	@click="addToPanier(chouchou)"
-	                    	 class="btn-ajouter-panier">
-	                    	Dans mon panier !
-	                    </button>
+                        <select
+                                v-model="chouchou.nbWanted"
+                                class="marioud-select">
+                            <option>0</option>
+                            <option v-for="(n, index) in chouchou.stock" :key="index">{{n}}</option>
+                        </select>
+                        <button v-if="chouchou.nbWanted"
+                                @click="addToPanier(chouchou)"
+                                class="btn-ajouter-panier">
+                            Dans mon panier !
+                        </button>
                     </div>
                     <div v-else class="not-available">
-                    	Plus dispo !
+                        Plus dispo !
                     </div>
                 </div>
             </div>
@@ -163,18 +164,32 @@
             panier: [],
         },
         methods: {
-        	addToPanier: function(chouchou) {
-        		if (this.panier.indexOf(chouchou) === -1) {
-	    			this.panier.push(chouchou);
-        		}
-        	}
+            addToPanier: function(chouchou) {
+                if (this.panier.indexOf(chouchou) === -1) {
+                    this.panier.push(chouchou);
+                }
+            },
+            validateCommand: function() {
+                var url = "https://vl8i0fdnvk.execute-api.us-east-1.amazonaws.com/globalStage";
+                var r = new XMLHttpRequest();
+                r.open("POST", url, true);
+                r.onreadystatechange = function () {
+                    if (r.readyState != 4 || r.status != 200) {
+                        console.error('ERROR', r);
+                        return;
+                    }
+                    var resp = r.responseText;
+                    console.log('RESP', resp);
+                };
+                r.send('data=yoyo');
+            }
         },
         computed: {
-        	panierReal: function() {
-        		return this.panier.filter(function(p) {
-    				return p.nbWanted > 0;
-        		});
-        	}
+            panierReal: function() {
+                return this.panier.filter(function(p) {
+                    return p.nbWanted > 0;
+                });
+            }
         }
     });
 
@@ -196,7 +211,7 @@
         var jsData = rows.slice(1).map(function(row) {
             var rowData = row.split(',');
             return {
-            	nbWanted: 0,
+                nbWanted: 0,
                 title: rowData[0],
                 price: rowData[1],
                 imageUrl: 'static/images/chouchous/' + rowData[2],
