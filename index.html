@@ -127,7 +127,7 @@
     }
 
     var r = new XMLHttpRequest();
-    r.open("GET", "data.csv", true);
+    r.open("GET", "data.csv?buster=" + Date.now(), true);
     r.onreadystatechange = function () {
         if (r.readyState != 4 || r.status != 200) {
             showPage();
