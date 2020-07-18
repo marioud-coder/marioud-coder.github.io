@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Chouchous Marioud</title>
+
+    <link rel="icon"
+      type="image/png"
+      href="static/images/favicon.png">
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
+
+    <style>
+
+        body {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .chouchou-container img {
+            width: 100%;
+        }
+
+        .chouchou-title {
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .gallery {
+            display: grid;
+            padding: 0 30px;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-column-gap: 25px;
+            grid-row-gap: 45px;
+            margin-bottom: 70px;
+        }
+
+        #couverture {
+            margin: 20px auto 50px;
+            width: 700px;
+            max-width: 100%;
+            display: inline-block;
+        }
+
+        #app {
+            transition: opacity 2.5s;
+        }
+
+        .hidden {
+            opacity: 0;
+        }
+
+        #passer-commande-container {
+            margin-bottom: 50px;
+        }
+
+        .marioud-btn {
+            font-size: 18px;
+            padding: 10px 28px;
+            color: #b70000;
+            border-radius: 4px;
+            background-color: white;
+            border: 1px solid #b70000;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .marioud-btn:hover {
+            background-color: #e39e9e44;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app" class="hidden">
+
+    <div v-if="loaded">
+
+        <div class="text-center">
+            <img id="couverture" src="static/images/couverture.png" alt="">
+        </div>
+
+        <div id="passer-commande-container" class="text-center">
+            <a class="marioud-btn"
+               target="_blank"
+               href="https://forms.gle/oRnkuCiR9ngTYbBR6">
+                Passer commande !
+            </a>
+        </div>
+
+        <div
+             class="gallery">
+            <div
+                    v-for="chouchou in chouchous"
+                    class="chouchou-container">
+                <img :src="chouchou.imageUrl" alt="">
+                <div class="chouchou-title">
+                    {{chouchou.title}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="static/vue.min.js"></script>
+
+<script type="application/javascript">
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            chouchous: [],
+            loaded: false,
+        }
+    });
+
+    console.log(app.message);
+
+    var showPage = function() {
+        document.getElementById('app').classList.remove('hidden');
+    }
+
+    var r = new XMLHttpRequest();
+    r.open("GET", "data.csv", true);
+    r.onreadystatechange = function () {
+        if (r.readyState != 4 || r.status != 200) {
+            showPage();
+            return;
+        }
+        var resp = r.responseText;
+        var rows = resp.split('\n');
+        var jsData = rows.slice(1).map(function(row) {
+            var rowData = row.split(',');
+            return {
+                title: rowData[0],
+                disponible: rowData[1] === 'true',
+                imageUrl: 'static/images/chouchous/' + rowData[2]
+            };
+        });
+        console.log(rows);
+        console.log(jsData);
+
+        app.chouchous = jsData;
+        app.loaded = true;
+        showPage();
+    };
+    r.send();
+
+</script>
+
+</body>
+</html>
