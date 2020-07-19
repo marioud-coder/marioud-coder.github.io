@@ -14,7 +14,7 @@
 
     <style>
 
-        body {
+        body, button {
             font-family: 'Playfair Display', serif;
         }
 
@@ -55,14 +55,9 @@
             opacity: 0;
         }
 
-        #passer-commande-container {
-            margin-bottom: 50px;
-        }
-
         .marioud-btn {
-            font-size: 18px;
             outline: 0;
-            padding: 10px 28px;
+            padding: 5px 7px;
             color: #b70000;
             border-radius: 4px;
             background-color: white;
@@ -75,6 +70,15 @@
             background-color: #e39e9e44;
         }
 
+        .passer-commande {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .valider-command {
+            font-size: 18px;
+            padding: 10px 20px;
+        }
 
         .marioud-select {
             width: 50px;
@@ -95,7 +99,79 @@
         }
 
         .not-available {
-            margin-top:5px;
+            margin-top: 0.5em;
+        }
+
+        #cart {
+            text-align: center;
+            position: fixed;
+            width: 100px;
+            top: 10px;
+            right: 15px;
+            cursor: pointer;
+        }
+
+        #cart img {
+            width: 60%;
+        }
+
+        #cart #nb-items {
+            font-size:14px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        table td, table th {
+            padding: 4px 25px;
+            text-align: center;
+        }
+
+        table th {
+            border-bottom: 1px solid grey;
+        }
+
+        textarea, input {
+            width: 100%;
+        }
+
+        input {
+            height: 20px;
+        }
+
+        .modal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255,255,255,1);
+            z-index: 2;
+            overflow: scroll;
+        }
+
+        .modal-close {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+        }
+
+        .modal-content {
+            max-width: 500px;
+            width: 95%;
+            margin: 80px auto;
+        }
+
+        .back-to-shop {
+            margin-top:1em;
+            cursor: pointer;
+            text-align: center;
+            color: grey;
+        }
+
+        .nb-in-panier {
             color: #b70000;
         }
 
@@ -107,17 +183,101 @@
 
     <div v-if="loaded">
 
+        <div
+                v-if="showConfirmModal"
+                class="modal-container">
+
+            <div class="marioud-btn modal-close"
+                 @click="showConfirmModal=false">
+                Retour au shop
+            </div>
+
+            <div class="modal-content">
+
+                <div v-if="successCommand" style="padding-top: 80px;">
+
+                    Top !
+                    <br>
+                    Je m'en occupe de ce pas je vous tiens au courant !
+
+
+                </div>
+                <div v-else>
+
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Chouchou</th>
+                            <th>Nombre</th>
+                            <th>Prix</th>
+                            <th>Total</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="panierElem in panierReal">
+                            <td>
+                                {{panierElem.title}}
+                            </td>
+                            <td>
+                                {{panierElem.nbWanted}}
+                            </td>
+                            <td>
+                                CHF{{panierElem.price}}
+                            </td>
+                            <td>
+                                CHF{{roundPrice(parseInt(panierElem.nbWanted) * panierElem.price)}}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div style="text-align: center; font-size: 18px;margin-top:14px;">
+                        Total: CHF{{totalPrice}}
+                    </div>
+
+                    <br><br>
+                    Votre adresse complète: <br>
+                    <textarea
+                            v-model="info.address"
+                            name="" id="" cols="30" rows="4"></textarea>
+
+                    <br><br>
+
+                    Vos informations de contact (e-mail, téléphone, ..): <br>
+                    <input v-model="info.contact" type="text">
+
+                    <br><br>
+
+                    <div class="text-center">
+                        <button
+                                @click="validateCommand"
+                                class="marioud-btn valider-command">
+                            Valider la commande
+                        </button>
+                        <br>
+                        <div @click="showConfirmModal=false"
+                             class="back-to-shop">
+                            Retourner au shop
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
         <div class="text-center">
             <img id="couverture" src="static/images/couverture.png" alt="">
         </div>
 
-        <div id="passer-commande-container" class="text-center">
-            <a class="marioud-btn"
-               target="_blank"
-               @click="validateCommand"
-            >
-                Passer commande !
-            </a>
+        <div id="cart"
+             @click="showConfirmModal=true"
+             v-if="nbItemsInPanier > 0">
+            <img src="static/images/cart.png" alt="cart">
+            <div id="nb-items" v-if="panierReal.length > 0">
+                {{nbItemsInPanier}} chouchou<template v-if="nbItemsInPanier>1">s</template>
+            </div>
+            <div class="marioud-btn passer-commande">
+                Passer commande
+            </div>
         </div>
 
         <div
@@ -130,17 +290,26 @@
                     {{chouchou.title}} <br>
                     {{chouchou.price}}.-
                     <div style="margin-top:0.5em;" v-if="chouchou.stock > 0">
-                        <select
-                                v-model="chouchou.nbWanted"
-                                class="marioud-select">
-                            <option>0</option>
-                            <option v-for="(n, index) in chouchou.stock" :key="index">{{n}}</option>
-                        </select>
-                        <button v-if="chouchou.nbWanted"
-                                @click="addToPanier(chouchou)"
-                                class="btn-ajouter-panier">
-                            Dans mon panier !
-                        </button>
+                        <div v-if="isInPanier(chouchou)"
+                             class="nb-in-panier">
+                            {{chouchou.nbWanted}} dans le panier
+                            <button class="marioud-btn"
+                                    @click="removeFromPanier(chouchou)">
+                                Modifier
+                            </button>
+                        </div>
+                        <div v-else>
+                            <select
+                                    v-model.number="chouchou.nbWanted"
+                                    class="marioud-select">
+                                <option v-for="(n, index) in chouchou.stock" :key="index">{{n}}</option>
+                            </select>
+                            <button v-if="chouchou.nbWanted"
+                                    @click="addToPanier(chouchou)"
+                                    class="btn-ajouter-panier">
+                                Ajouter au panier
+                            </button>
+                        </div>
                     </div>
                     <div v-else class="not-available">
                         Plus dispo !
@@ -162,26 +331,92 @@
             chouchous: [],
             loaded: false,
             panier: [],
+            showConfirmModal: false,
+            info: {
+                address: '',
+                contact: '',
+            },
+            errors: {
+                address: false,
+                contact: false
+            },
+            localStorageKey: 'marioud-chouchou-panier',
+            successCommand: false,
         },
+
         methods: {
+            storeOnStorage: function() {
+                localStorage.setItem(this.localStorageKey, JSON.stringify(this.panier));
+            },
             addToPanier: function(chouchou) {
-                if (this.panier.indexOf(chouchou) === -1) {
+                if (!this.isInPanier(chouchou)) {
                     this.panier.push(chouchou);
+                    this.storeOnStorage();
                 }
             },
+            removeFromPanier: function(chouchou) {
+                this.panier = this.panier.filter(function(c) {
+                    return c.title !== chouchou.title;
+                });
+                this.storeOnStorage();
+            },
+            isInPanier: function(chouchou) {
+                return this.panierReal.find(function(c) {
+                    return c.title === chouchou.title;
+                });
+            },
             validateCommand: function() {
-                var url = "https://vl8i0fdnvk.execute-api.us-east-1.amazonaws.com/globalStage";
+                var self = this;
+                this.errors.address = false;
+                this.errors.contact = false;
+                if (!this.info.address) {
+                    this.errors.address = true;
+                    return;
+                }
+
+                if (!this.info.contact) {
+                    this.errors.contact = true;
+                    return;
+                }
+
+                var url = "https://vl8i0fdnvk.execute-api.us-east-1.amazonaws.com/globalStage/chouchousMarioudCommand";
                 var r = new XMLHttpRequest();
                 r.open("POST", url, true);
+                r.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
                 r.onreadystatechange = function () {
                     if (r.readyState != 4 || r.status != 200) {
-                        console.error('ERROR', r);
                         return;
+                    } else {
+                        var resp = JSON.parse(r.responseText);
+
+                        self.successCommand = true;
+                        self.panier = [];
                     }
-                    var resp = r.responseText;
-                    console.log('RESP', resp);
                 };
-                r.send('data=yoyo');
+                r.send(JSON.stringify({
+                    chouchous: this.panierReal,
+                    address: this.info.address,
+                    contact: this.info.contact,
+                }));
+            },
+            roundPrice: function(price) {
+                return (Math.round(price * 100) / 100);
+            },
+            loadPanierFromStorage: function() {
+                var self = this;
+                try {
+                    var panier = JSON.parse(localStorage.getItem(this.localStorageKey) || "[]");
+                    this.panier = panier.map(function(p) {
+                        return self.chouchous.find(function(c) {
+                            console.log(c.title, p.title);
+                            return c.title === p.title;
+                        });
+                    }).filter(function(p) {
+                        return !!p;
+                    });
+                } catch(e) {
+                    this.panier = [];
+                }
             }
         },
         computed: {
@@ -189,7 +424,17 @@
                 return this.panier.filter(function(p) {
                     return p.nbWanted > 0;
                 });
-            }
+            },
+            nbItemsInPanier: function() {
+                return this.panierReal.reduce(function(acc, curr) {
+                    return acc + parseInt(curr.nbWanted);
+                }, 0);
+            },
+            totalPrice: function() {
+                return this.roundPrice(this.panierReal.reduce(function(acc, curr) {
+                    return acc + (parseInt(curr.nbWanted) * curr.price);
+                }, 0));
+            },
         }
     });
 
@@ -211,9 +456,9 @@
         var jsData = rows.slice(1).map(function(row) {
             var rowData = row.split(',');
             return {
-                nbWanted: 0,
+                nbWanted: 1,
                 title: rowData[0],
-                price: rowData[1],
+                price: parseFloat(rowData[1]),
                 imageUrl: 'static/images/chouchous/' + rowData[2],
                 stock: parseInt(rowData[3]) || 0
             };
@@ -223,6 +468,8 @@
 
         app.chouchous = jsData;
         app.loaded = true;
+
+        app.loadPanierFromStorage();
         showPage();
     };
     r.send();
