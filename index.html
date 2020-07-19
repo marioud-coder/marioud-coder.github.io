@@ -18,6 +18,10 @@
             font-family: 'Playfair Display', serif;
         }
 
+        body {
+            color: rgb(119,137,129);
+        }
+
         .chouchou-container img {
             width: 100%;
         }
@@ -171,8 +175,14 @@
             color: grey;
         }
 
-        .nb-in-panier {
-            color: #b70000;
+        .success-command-message {
+            padding-top: 80px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .inputError {
+            border: 1px solid #b70000;
         }
 
     </style>
@@ -187,22 +197,28 @@
                 v-if="showConfirmModal"
                 class="modal-container">
 
-            <div class="marioud-btn modal-close"
-                 @click="showConfirmModal=false">
-                Retour au shop
-            </div>
-
             <div class="modal-content">
 
-                <div v-if="successCommand" style="padding-top: 80px;">
+                <div v-if="successCommand"
+                     class="success-command-message">
 
                     Top !
                     <br>
                     Je m'en occupe de ce pas je vous tiens au courant !
 
+                    <div style="margin-top: 30px;">
+                        <button @click="closeModal" class="marioud-btn">
+                            Retour au shop
+                        </button>
+                    </div>
 
                 </div>
                 <div v-else>
+
+                    <div class="marioud-btn modal-close"
+                         @click="closeModal">
+                        Retour au shop
+                    </div>
 
                     <table>
                         <thead>
@@ -238,12 +254,17 @@
                     Votre adresse complète: <br>
                     <textarea
                             v-model="info.address"
+                            @blur="errors.address = false"
+                            :class="{inputError: errors.address}"
                             name="" id="" cols="30" rows="4"></textarea>
 
                     <br><br>
 
                     Vos informations de contact (e-mail, téléphone, ..): <br>
-                    <input v-model="info.contact" type="text">
+                    <input v-model="info.contact"
+                           @blur="errors.contact = false"
+                           :class="{inputError: errors.contact}"
+                           type="text">
 
                     <br><br>
 
@@ -254,7 +275,7 @@
                             Valider la commande
                         </button>
                         <br>
-                        <div @click="showConfirmModal=false"
+                        <div @click="closeModal"
                              class="back-to-shop">
                             Retourner au shop
                         </div>
@@ -365,6 +386,12 @@
                     return c.title === chouchou.title;
                 });
             },
+            closeModal: function() {
+                this.errors.address = false;
+                this.errors.contact = false;
+                this.showConfirmModal = false;
+                this.successCommand = false;
+            },
             validateCommand: function() {
                 var self = this;
                 this.errors.address = false;
@@ -391,6 +418,7 @@
 
                         self.successCommand = true;
                         self.panier = [];
+                        self.storeOnStorage();
                     }
                 };
                 r.send(JSON.stringify({
